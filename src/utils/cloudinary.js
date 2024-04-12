@@ -1,28 +1,45 @@
-import {v2 as cloudinary} from 'cloudinary';
-import fs from "fs"
+import { v2 as cloudinary } from 'cloudinary';
 
-cloudinary.config({ 
-    cloud_name:process.env.CLOUDINARY_CLOUD_NAME, 
-    api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: process.env.CLOUDINARY_API_SECRETE
-  });
+import fs from 'fs';
 
 
-  const uploadOnCloudinary= async (localFilePath)=>{
-    try{
-         if(!localFilePath) return null;
-         const response=await cloudinary.uploader.upload(localFilePath,{
-            resource_type:"auto"
-         })
-         console.log("file is uploaded on cloudinary ",response.url)
-         return response
-    }catch(e){
-       fs.unlink(localFilePath)
-       return null
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRETE
+});
+
+
+
+const uploadOnCloudinary = async (localFilePath) => {
+  try {
+    if (!localFilePath) {
+      throw new Error('Avatar file is required');
     }
+
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: 'auto'
+    });
+
+    console.log('File uploaded to Cloudinary:', response.url);
+
+    // Delete the local file after successful upload
+    fs.unlinkSync(localFilePath);
+    console.log('Local file deleted successfully.');
+
+    return response;
+  } catch (error) {
+    console.error('Error uploading file to Cloudinary:', error);
+
+    // Handle file deletion if upload fails
+    if (localFilePath && fs.existsSync(localFilePath)) {
+      fs.unlinkSync(localFilePath);
+      console.log('Local file deleted due to upload error.');
+    }
+
+    return null;
   }
+};
 
- export {uploadOnCloudinary}
+export { uploadOnCloudinary };
 
-
-  
